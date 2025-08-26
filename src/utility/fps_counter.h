@@ -11,7 +11,7 @@ private:
 public:
 	FPSCounter();
 	void update();
-	int getFPS();
-	float getMS();
-	void setWindow(GLFWwindow* window);
+	int getFPS() const;
+	float getMS() const;
+	void setWindow(GLFWwindow* window) const;
 };

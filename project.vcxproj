@@ -168,6 +168,7 @@
     <ClCompile Include="src\scene\scene_select.cpp" />
     <ClCompile Include="src\shader\shader_builder.cpp" />
     <ClCompile Include="src\shader\texture.cpp" />
+    <ClCompile Include="src\utility\date_time.cpp" />
     <ClCompile Include="src\utility\fps_counter.cpp" />
     <ClCompile Include="src\shader\shader_manager.cpp" />
     <ClCompile Include="src\utility\glad.c" />
@@ -175,6 +176,7 @@
     <ClCompile Include="src\utility\includes.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="README.md" />
     <None Include="res\shaders\compute.glsl" />
     <None Include="res\shaders\fragment.glsl" />
     <None Include="res\shaders\vertex.glsl" />
@@ -196,6 +198,7 @@
     <ClInclude Include="src\input\controls.h" />
     <ClInclude Include="src\scene\scene.h" />
     <ClInclude Include="src\shader\texture.h" />
+    <ClInclude Include="src\utility\date_time.h" />
     <ClInclude Include="src\utility\fps_counter.h" />
     <ClInclude Include="src\utility\includes.h" />
     <ClInclude Include="src\scene\camera.h" />

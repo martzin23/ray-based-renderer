@@ -2,11 +2,10 @@
 #include "engine/engine.h"
 
 /* TODO
-save framebuffer 
-	https://blog.42yeah.is/opengl/2023/05/27/framebuffer-export.html
 load image
 	heightmapping
 	cube mapping
+unified interface color
 
 pbr pathtracing
 	refraction
@@ -20,12 +19,11 @@ fix free move camera
 dls
 importance light sampling
 triangle mesh
-BVG
+BVH
 
 */
 
 int main() {
-
 	Engine *engine = new Engine();
 
 	while (engine->isRunning()) {

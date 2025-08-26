@@ -159,58 +159,63 @@ void ShaderManager::packUniforms(unsigned int uniform_buffer) const {
 	glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(PackedUniforms), data.data());
 }
 
-//void ShaderManager::screenshot(const std::string& filepath, GLFWwindow *window) {
+void ShaderManager::screenshot(const std::string& filepath, GLFWwindow *window) const {
 
-	//int framebuffer_width, framebuffer_height;
-	//glfwGetWindowSize(window, &framebuffer_height, &framebuffer_width);
-	//unsigned int texture;
-	//unsigned int render_buffer;
-	//unsigned int frame_buffer;
+	int window_width, window_height;
+	glfwGetWindowSize(window, &window_width, &window_height);
+	unsigned int texture;
+	unsigned int render_buffer;
+	unsigned int frame_buffer;
 
-	//// Generate texture
-	//glGenTextures(1, &texture);
-	//glBindTexture(GL_TEXTURE_2D, texture);
-	//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-	//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-	//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-	//glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, framebuffer_width, framebuffer_height, 0, GL_RGB, GL_UNSIGNED_BYTE, nullptr);
+	//https://blog.42yeah.is/opengl/2023/05/27/framebuffer-export.html
 
-	//// Generate RBO
-	//glGenRenderbuffers(1, &render_buffer);
-	//glBindRenderbuffer(GL_RENDERBUFFER, render_buffer);
-	//glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, framebuffer_width, framebuffer_height);
+	// Generate texture
+	glGenTextures(1, &texture);
+	glBindTexture(GL_TEXTURE_2D, texture);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, window_width, window_height, 0, GL_RGB, GL_UNSIGNED_BYTE, nullptr);
 
-	//glGenFramebuffers(1, &frame_buffer);
-	//glBindFramebuffer(GL_FRAMEBUFFER, frame_buffer);
-	//glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, texture, 0);
-	//glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, render_buffer);
+	// Generate RBO
+	glGenRenderbuffers(1, &render_buffer);
+	glBindRenderbuffer(GL_RENDERBUFFER, render_buffer);
+	glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, window_width, window_height);
 
-	//glBindFramebuffer(GL_FRAMEBUFFER, GL_NONE);
+	glGenFramebuffers(1, &frame_buffer);
+	glBindFramebuffer(GL_FRAMEBUFFER, frame_buffer);
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, texture, 0);
+	glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, render_buffer);
 
-	//// Render to Frambuffer
-	//glBindFramebuffer(GL_FRAMEBUFFER, frame_buffer);
-	//glViewport(0, 0, framebuffer_width, framebuffer_height);
+	glBindFramebuffer(GL_FRAMEBUFFER, GL_NONE);
 
-	//// Every draw call below will draw stuff onto the framebuffer
-	//glUseProgram(pipeline);
-	//glUniform1i(glGetUniformLocation(pipeline, "downsample_factor"), downsample_factor);
-	//glActiveTexture(GL_TEXTURE0);
-	//glBindTexture(GL_TEXTURE_2D, color_buffer);
+	// Bind frame buffer
+	glBindFramebuffer(GL_FRAMEBUFFER, frame_buffer);
+	glViewport(0, 0, window_width, window_height);
 
-	//glDrawArrays(GL_TRIANGLES, 0, 3);
+	// Draw
+	glUseProgram(pipeline);
+	glUniform1i(glGetUniformLocation(pipeline, "downsample_factor"), downsample_factor);
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, color_buffer);
+	glDrawArrays(GL_TRIANGLES, 0, 3);
 
-	//glBindFramebuffer(GL_FRAMEBUFFER, GL_NONE);
-	//// Don't forget to reset the viewport to the window's viewport!
-	//glViewport(0, 0, framebuffer_width, framebuffer_height);
+	 // Read texture
+	std::unique_ptr<unsigned char[]> data = std::make_unique<unsigned char[]>(sizeof(unsigned int) * window_width * window_height * 3);
+	glBindTexture(GL_TEXTURE_2D, texture);
+	glPixelStorei(GL_PACK_ALIGNMENT, 1);
+	glGetTexImage(GL_TEXTURE_2D, 0, GL_RGB, GL_UNSIGNED_BYTE, data.get());
 
-	// // Save image
-	//std::unique_ptr<unsigned char[]> data = std::make_unique<unsigned char[]>(framebuffer_width * framebuffer_height * 3 * sizeof(unsigned int));
-	//glBindTexture(GL_TEXTURE_2D, texture);
+	// Save image
+	stbi_flip_vertically_on_write(true);
+	int ret = stbi_write_jpg(filepath.c_str(), window_width, window_height, 3, data.get(), 100);
 
-	//glPixelStorei(GL_PACK_ALIGNMENT, 1);
-	//glGetTexImage(GL_TEXTURE_2D, 0, GL_RGB, GL_UNSIGNED_BYTE, data.get());
+	// Clean up
+	glBindFramebuffer(GL_FRAMEBUFFER, GL_NONE);
+	glViewport(0, 0, window_width, window_height);
 
-	//stbi_flip_vertically_on_write(true);
-	//int ret = stbi_write_jpg("result.jpg", framebuffer_width, framebuffer_height, 3, data.get(), 100);
-//}
+	glDeleteTextures(1, &texture);
+	glDeleteRenderbuffers(1, &render_buffer);
+	glDeleteFramebuffers(1, &frame_buffer);
+}

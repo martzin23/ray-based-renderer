@@ -51,7 +51,7 @@ void GUI::render() {
 	ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 }
 
-void GUI::build(ShaderManager* shader, SceneManager* scene, Camera* camera, FPSCounter* fps_counter) {
+void GUI::build(ShaderManager* shader, SceneManager* scene, Camera* camera, FPSCounter* fps_counter, GLFWwindow* window) {
 	if (!this->gui_active) return;
 
 	ImGuiWindowFlags window_flags = ImGuiWindowFlags_NoCollapse || ImGuiWindowFlags_NoTitleBar;
@@ -84,6 +84,10 @@ void GUI::build(ShaderManager* shader, SceneManager* scene, Camera* camera, FPSC
 				if (ImGui::ArrowButton("##-res", ImGuiDir_Down)) shader->downsample_factor++;
 				ImGui::Checkbox("Auto refresh", &shader_refresh);
 				helpMarker("Reset screen when clicking so that the changes are immediately visible");
+				if (ImGui::Button("Screenshot")) {
+					shader->screenshot("res/screenshots/" + getDateTime() + ".jpg", window);
+				};
+				helpMarker("Save current frame to res/screenshots/.jpg");
 			ImGui::SeparatorText("Interface");
 				ImGui::Text("Scale");
 				ImGui::SameLine();
@@ -337,16 +341,20 @@ void GUI::updatePallete(ImVec4 primary, ImVec4 secondary, ImVec4 background) {
 	ImVec4 primary_highlight = ImVec4(primary_normal.x * 1.5f, primary_normal.y * 1.5f, primary_normal.z * 1.5f, primary_normal.w);
 	ImVec4 primary_muted = ImVec4(primary_normal.x, primary_normal.y, primary_normal.z, primary_normal.w * 0.5f);
 
+	//ImVec4 secondary_normal = ImVec4(primary.x, primary.y, primary.z, primary.w * 0.3f);
 	ImVec4 secondary_normal = secondary;
 	ImVec4 secondary_highlight = ImVec4(secondary_normal.x * 1.5f, secondary_normal.y * 1.5f, secondary_normal.z * 1.5f, secondary_normal.w);
 	ImVec4 secondary_muted = ImVec4(secondary_normal.x, secondary_normal.y, secondary_normal.z, secondary_normal.w * 0.5f);
 
+	//ImVec4 background_normal = ImVec4(primary.x * 0.25f, primary.y * 0.25f, primary.z * 0.25f, primary.w);
+	ImVec4 background_normal = background;
+
 	ImGuiStyle& style = ImGui::GetStyle();
 	style.Colors[ImGuiCol_Text] = ImVec4(1.f, 1.f, 1.f, 1.f);
 	style.Colors[ImGuiCol_TextDisabled] = ImVec4(1.f, 1.f, 1.f, 0.5f);
-	style.Colors[ImGuiCol_WindowBg] = background;
+	style.Colors[ImGuiCol_WindowBg] = background_normal;
 	style.Colors[ImGuiCol_ChildBg] = blank;
-	style.Colors[ImGuiCol_PopupBg] = background;
+	style.Colors[ImGuiCol_PopupBg] = background_normal;
 	style.Colors[ImGuiCol_Border] = secondary_muted;
 	style.Colors[ImGuiCol_BorderShadow] = secondary_muted;
 	style.Colors[ImGuiCol_FrameBg] = secondary_normal;

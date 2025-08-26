@@ -8,6 +8,7 @@
 #include "../scene/camera.h"
 #include "../shader/shader.h"
 #include "../utility/fps_counter.h"
+#include "../utility/date_time.h"
 
 class GUI {
 public:
@@ -15,7 +16,7 @@ public:
 	~GUI();
 	void setup();
 	void render();
-	void build(ShaderManager *shaders, SceneManager *scene, Camera *camera, FPSCounter *fps_counter);
+	void build(ShaderManager *shaders, SceneManager *scene, Camera *camera, FPSCounter *fps_counter, GLFWwindow* window);
 
 	void updatePallete(ImVec4 primary, ImVec4 secondary, ImVec4 background);
 	void helpMarker(const char* text);
@@ -28,7 +29,7 @@ private:
 	int window_width;
 	int window_height;
 	bool gui_movable = false;
-	bool gui_background = false;
+	bool gui_background = true;
 	float gui_scale = 1.0f;
 	bool shader_refresh = true;
 public:

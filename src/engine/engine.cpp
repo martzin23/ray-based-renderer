@@ -1,7 +1,5 @@
 #include "engine.h"
 
-#define LCL_SIZE 32
-
 Engine::Engine() {
 	this->setup();
 
@@ -86,8 +84,9 @@ void Engine::render() {
 	shaders->focus_blur = camera->focus_blur;
 	shaders->updateUniforms(scene);
 
-	unsigned int workgroup_size_x = (window_width + LCL_SIZE * shaders->downsample_factor - 1) / (LCL_SIZE * shaders->downsample_factor);
-	unsigned int workgroup_size_y = (window_height + LCL_SIZE * shaders->downsample_factor - 1) / (LCL_SIZE * shaders->downsample_factor);
+	const unsigned int local_size = 32;
+	const unsigned int workgroup_size_x = (window_width + local_size * shaders->downsample_factor - 1) / (local_size * shaders->downsample_factor);
+	const unsigned int workgroup_size_y = (window_height + local_size * shaders->downsample_factor - 1) / (local_size * shaders->downsample_factor);
 
 	glUseProgram(shaders->compute);
 	glDispatchCompute(workgroup_size_x, workgroup_size_y, 1);
@@ -97,7 +96,7 @@ void Engine::render() {
 	glDrawArrays(GL_TRIANGLES, 0, 3);
 
 	gui->setup();
-	gui->build(shaders, scene, camera, fps_counter);
+	gui->build(shaders, scene, camera, fps_counter, window);
 	gui->render();
 
 	glfwSwapBuffers(window);

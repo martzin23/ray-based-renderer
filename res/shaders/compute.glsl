@@ -154,55 +154,55 @@ void main() {
     }
     else {
 
-        camera_ray.direction = normalize(camera_ray.direction + randomDirection(pixel_seed) * 0.0003 * fov * downsample_factor);
-        focusBlur(camera_ray, pixel_seed, focus_distance, focus_strength);
-
-        Data data = rayMarch(camera_ray);
-        const vec3 ld = light_position - data.position;
-        Data shadow_data = rayMarch(Ray(data.position + pow(2,-custom_int2) * 2 * data.normal, normalize(ld)));
-        
-        const vec3 color = mix(-data.normal * 0.25 + 0.75, vec3(1, 0.561, 0), 0.25);
-        const float shadow = (shadow_data.dist < length(ld)) ? 0.0 : light_intensity / length(ld);
-        const float diffuse = clamp(dot(normalize(ld), data.normal), 0.0, 1.0);
-        const float specular = pow(clamp(dot(normalize(ld), reflect(camera_ray.direction, data.normal)),0.0, 1.0), 30);
-        const float ao = clamp(1.0 - 1.0 * data.index / max_marches, 0.5, 1.0);
-        
-        const vec3 current_color = (color + specular) * (shadow * diffuse + 0.1) * ao * int(data.dist < 10.0);
-        vec3 previous_color = imageLoad(color_buffer, pixel_position).xyz;
-        if (isinf(previous_color).x || isnan(previous_color).x) previous_color = vec3(0.0);
-        output_color = previous_color * ((temporal_counter - 1.0) / temporal_counter) + current_color * (1.0 / temporal_counter);
-
-//        
 //        camera_ray.direction = normalize(camera_ray.direction + randomDirection(pixel_seed) * 0.0003 * fov * downsample_factor);
 //        focusBlur(camera_ray, pixel_seed, focus_distance, focus_strength);
 //
-//        Ray ray = camera_ray;
-//        vec3 sample_color = vec3(0.0);
-//        vec3 ray_color = vec3(1.0);
-//
-//        for (int bounce_counter=0; bounce_counter < max_bounces; bounce_counter++) {
-//            Data data = rayMarch(ray);
-//
-//            if (!data.collided) {
-//                vec3 sky = skyValue(ray.direction);
-//                sample_color += sky * ray_color;
-//                break;
-//            }
-//            
-//            ray.direction = normalize(randomDirection(pixel_seed) + data.normal);
-//            ray.origin = data.position + ray.direction * epsilon;
-//            
-//            vec3 color = vec3(1.0);
-////            vec3 color = -data.normal * 0.5 + 0.5;
-//            vec3 emission = vec3(0.0);
-//            sample_color += emission * color * ray_color;
-//            ray_color *= color;
-//        }
-//
-//        vec3 current_color = sample_color;
+//        Data data = rayMarch(camera_ray);
+//        const vec3 ld = light_position - data.position;
+//        Data shadow_data = rayMarch(Ray(data.position + pow(2,-custom_int2) * 2 * data.normal, normalize(ld)));
+//        
+//        const vec3 color = mix(-data.normal * 0.25 + 0.75, vec3(1, 0.561, 0), 0.25);
+//        const float shadow = (shadow_data.dist < length(ld)) ? 0.0 : light_intensity / length(ld);
+//        const float diffuse = clamp(dot(normalize(ld), data.normal), 0.0, 1.0);
+//        const float specular = pow(clamp(dot(normalize(ld), reflect(camera_ray.direction, data.normal)),0.0, 1.0), 30);
+//        const float ao = clamp(1.0 - 1.0 * data.index / max_marches, 0.5, 1.0);
+//        
+//        const vec3 current_color = (color + specular) * (shadow * diffuse + 0.1) * ao * int(data.dist < 10.0);
 //        vec3 previous_color = imageLoad(color_buffer, pixel_position).xyz;
 //        if (isinf(previous_color).x || isnan(previous_color).x) previous_color = vec3(0.0);
 //        output_color = previous_color * ((temporal_counter - 1.0) / temporal_counter) + current_color * (1.0 / temporal_counter);
+
+//        
+        camera_ray.direction = normalize(camera_ray.direction + randomDirection(pixel_seed) * 0.0003 * fov * downsample_factor);
+        focusBlur(camera_ray, pixel_seed, focus_distance, focus_strength);
+
+        Ray ray = camera_ray;
+        vec3 sample_color = vec3(0.0);
+        vec3 ray_color = vec3(1.0);
+
+        for (int bounce_counter=0; bounce_counter < max_bounces; bounce_counter++) {
+            Data data = rayMarch(ray);
+
+            if (!data.collided) {
+                vec3 sky = skyValue(ray.direction);
+                sample_color += sky * ray_color;
+                break;
+            }
+            
+            ray.direction = normalize(randomDirection(pixel_seed) + data.normal);
+            ray.origin = data.position + ray.direction * epsilon;
+            
+            vec3 color = vec3(1.0);
+//            vec3 color = -data.normal * 0.5 + 0.5;
+            vec3 emission = vec3(0.0);
+            sample_color += emission * color * ray_color;
+            ray_color *= color;
+        }
+
+        vec3 current_color = sample_color;
+        vec3 previous_color = imageLoad(color_buffer, pixel_position).xyz;
+        if (isinf(previous_color).x || isnan(previous_color).x) previous_color = vec3(0.0);
+        output_color = previous_color * ((temporal_counter - 1.0) / temporal_counter) + current_color * (1.0 / temporal_counter);
 
     }
     imageStore(color_buffer, pixel_position, vec4(output_color, 1.0));
@@ -333,18 +333,17 @@ Data rayMarch(Ray camera_ray) {
         total_dist += d * march_multiplier;
     }
 
-    data.normal = derivateNormal(camera_ray.origin, pow(2,-custom_int2));
+    data.normal = derivateNormal(camera_ray.origin, pow(2,-custom_int));
     data.position = camera_ray.origin;
     data.dist = total_dist;
     return data;
 }
 
 vec3 derivateNormal(vec3 position, float epsilon) {
-    float d = SDF(position);
     vec3 normal;
-	normal.x = (SDF(position + vec3(epsilon, 0.0, 0.0)) - d) / epsilon;
-	normal.y = (SDF(position + vec3(0.0, epsilon, 0.0)) - d) / epsilon;
-	normal.z = (SDF(position + vec3(0.0, 0.0, epsilon)) - d) / epsilon;
+	normal.x = (SDF(position + vec3(epsilon, 0.0, 0.0)) - SDF(position - vec3(epsilon, 0.0, 0.0))) / (2 * epsilon);
+	normal.y = (SDF(position + vec3(0.0, epsilon, 0.0)) - SDF(position - vec3(0.0, epsilon, 0.0))) / (2 * epsilon);
+	normal.z = (SDF(position + vec3(0.0, 0.0, epsilon)) - SDF(position - vec3(0.0, 0.0, epsilon))) / (2 * epsilon);
     return normalize(normal);
 }
 
@@ -381,7 +380,7 @@ float SDF(vec3 p) {
         const float fixed_radius2 = custom_normalized * 10;
         vec3 z = p;
         float dr = 1.0;
-        for (int n = 0; n < custom_int; n++) {
+        for (int n = 0; n < custom_int2 + 3; n++) {
 	        z = clamp(z, -folding_limit, folding_limit) * 2.0 - z;
 
 	        float r2 = dot(z,z);

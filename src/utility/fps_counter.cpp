@@ -4,7 +4,7 @@ FPSCounter::FPSCounter() {
 	last_time = glfwGetTime();
 	num_frames = 0;
 	frame_time = 0.0;
-	frame_rate = 0.0;
+	frame_rate = 0;
 }
 
 void FPSCounter::update() {
@@ -20,15 +20,15 @@ void FPSCounter::update() {
 	++num_frames;
 }
 
-int FPSCounter::getFPS() {
+int FPSCounter::getFPS() const {
 	return frame_rate;
 }
 
-float FPSCounter::getMS() {
+float FPSCounter::getMS() const {
 	return (float)frame_time;
 }
 
-void FPSCounter::setWindow(GLFWwindow* window) {
+void FPSCounter::setWindow(GLFWwindow* window) const {
 	std::stringstream title;
 	title << frame_rate << " fps / " << frame_time << " ms";
 	glfwSetWindowTitle(window, title.str().c_str());

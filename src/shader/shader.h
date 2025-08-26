@@ -2,8 +2,9 @@
 #include "../utility/includes.h"
 #include "../scene/scene.h"
 #include "../shader/texture.h"
-//#include "../utility/stb_image.h"
-//#include "../utility/stb_image_write.h"
+#include "../utility/stb_image.h"
+#include "../utility/stb_image_write.h"
+
 #define MAX_BODIES 128
 
 class ShaderManager {
@@ -13,6 +14,7 @@ public:
 
 	void updateUniforms(SceneManager* scene);
 	void packUniforms(unsigned int uniform_buffer) const;
+	void screenshot(const std::string& filepath, GLFWwindow* window) const;
 
 private:
 	void setupUniforms(GLFWwindow* window);
@@ -20,7 +22,6 @@ private:
 	unsigned int make_module(const std::string& filepath, unsigned int module_type);
 	unsigned int make_pipeline_shader(const std::string& vertex_filepath, const std::string& fragment_filepath);
 	unsigned int make_compute_shader(const std::string& compute_filepath);
-	//void screenshot(const std::string& filepath, GLFWwindow *window);
 
 public:
 	// Program IDs
