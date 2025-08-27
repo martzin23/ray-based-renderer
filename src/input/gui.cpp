@@ -155,11 +155,10 @@ void GUI::build(ShaderManager* shader, SceneManager* scene, Camera* camera, FPSC
 				helpMarker("Maximum number of steps a ray can take");
 				ImGui::SliderFloat("March multiplier", &shader->march_multiplier, 0.f, 1.f);
 				helpMarker("Multiplies the size of marches, reduces artifacts, slows performance");
-				ImGui::InputInt("Detail", &shader->custom_int2, 1, 5);
-				helpMarker("Surface threshold of raymarching, level of detail for fractals");
-				ImGui::InputInt("Normals precision", &shader->custom_int, 1, 5);
-				helpMarker("Number of iterations for calculating fractals, reduces artifacts");
 				ImGui::SliderFloat("Epsilon", &shader->epsilon, 0.f, 1.f, "%.6f", ImGuiSliderFlags_Logarithmic);
+				helpMarker("Drives precision of calculating normals, tweak to reduce artifacts");
+				ImGui::InputInt("Detail", &shader->detail, 1, 5);
+				helpMarker("Surface threshold of raymarching, level of detail for fractals");
 			ImGui::SeparatorText("Signed Distance Function");
 				ImGui::Text("Type");
 				ImGui::SameLine();
@@ -172,7 +171,7 @@ void GUI::build(ShaderManager* shader, SceneManager* scene, Camera* camera, FPSC
 				if (ImGui::Button("MandelBox"))
 				{
 					shader->sdf_type = 2;
-					shader->custom_float = -2.f;
+					shader->custom_float2 = -2.f;
 					scene_visible = false;
 				}
 				ImGui::SameLine();
@@ -194,29 +193,30 @@ void GUI::build(ShaderManager* shader, SceneManager* scene, Camera* camera, FPSC
 					scene_visible = false;
 				}
 				helpMarker("Type of body that is rendered");
-				ImGui::Text("If you can't see the fractals, move closer to the origin of the coordinate system!");
+				warningMarker("If you can't see anything, try moving closer of further from the origin of the coordinate system!");
 				switch (shader->sdf_type) {
 				case 1:
-					ImGui::DragFloat("Power", &shader->custom_normalized, 0.1f);
+					ImGui::DragFloat("Power", &shader->custom_float1, 0.1f);
 					helpMarker("Changes the appearance of the fractal");
 					break;
 				case 2:
-					ImGui::DragFloat("Fixed radius", &shader->custom_normalized, 0.01f);
-					ImGui::DragFloat("Scale", &shader->custom_float, 0.01f);
-					ImGui::DragFloat("Folding limit", &shader->custom_float2, 0.01f);
-					ImGui::DragFloat("Min radius", &shader->custom_float3, 0.01f);
+					ImGui::DragFloat("Fixed radius", &shader->custom_float1, 0.01f);
+					ImGui::DragFloat("Scale", &shader->custom_float2, 0.01f);
+					ImGui::DragFloat("Folding limit", &shader->custom_float3, 0.01f);
+					ImGui::DragFloat("Min radius", &shader->custom_float4, 0.01f);
 					break;
 				case 3:
 					break;
 				case 4:
-					ImGui::DragFloat("Height", &shader->custom_normalized, 0.01f);
-					ImGui::DragFloat("Size", &shader->custom_float, 0.01f);
+					ImGui::DragFloat("Height", &shader->custom_float1, 0.01f);
+					ImGui::DragFloat("Size", &shader->custom_float2, 0.01f);
 					break;
 				case 0:
-					ImGui::DragFloat("Custom Float", &shader->custom_normalized, 0.01f);
-					ImGui::DragFloat("Custom Float1", &shader->custom_float, 0.01f);
-					ImGui::DragFloat("Custom Float2", &shader->custom_float2, 0.01f);
-					ImGui::DragFloat("Custom Float3", &shader->custom_float3, 0.01f);
+					ImGui::DragFloat("Custom Float", &shader->custom_float1, 0.01f);
+					ImGui::DragFloat("Custom Float1", &shader->custom_float2, 0.01f);
+					ImGui::DragFloat("Custom Float2", &shader->custom_float3, 0.01f);
+					ImGui::DragFloat("Custom Float3", &shader->custom_float4, 0.01f);
+					ImGui::InputInt("Custom Int", &shader->custom_int, 1, 5);
 					break;
 				}
 			ImGui::SeparatorText("Lighting");
@@ -430,6 +430,12 @@ void GUI::updatePallete(ImVec4 color) {
 void GUI::helpMarker(const char* text) {
 	ImGui::SameLine();
 	ImGui::TextDisabled("(?)");
+	ImGui::SetItemTooltip(text);
+}
+
+void GUI::warningMarker(const char* text) {
+	ImGui::SameLine();
+	ImGui::TextDisabled("(!)");
 	ImGui::SetItemTooltip(text);
 }
 

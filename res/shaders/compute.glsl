@@ -41,17 +41,17 @@ layout (std140, binding = 1) uniform UniformBlock {
     float fov;
     float epsilon;
 	int custom_int;
-	float custom_normalized;
-	float custom_float;
+	float custom_float1;
+	float custom_float2;
 	float march_multiplier;
     vec3 sun_direction;
-	int custom_int2;
+	int detail;
     float focus_distance;
     float focus_strength;
-    float custom_float2;
-    float custom_float3;
-    vec3 light_position;
-    float light_intensity;
+    float custom_float23;
+    float custom_float24;
+    vec3 light_position; // unused
+    float light_intensity; // unused
 };
 layout (std140, binding = 2) uniform BodyBlock {
     Body bodies[MAX_BODIES];
@@ -134,7 +134,7 @@ void main() {
         focusBlur(camera_ray, pixel_seed, focus_distance, focus_strength);
 
         Data data = rayMarch(camera_ray);
-        Data shadow_data = rayMarch(Ray(data.position + pow(2,-custom_int2) * 2 * data.normal, sun_direction));
+        Data shadow_data = rayMarch(Ray(data.position + pow(2,-detail) * 2 * data.normal, sun_direction));
         
         const vec3 color = -data.normal * 0.25 + 0.75;
         const float shadow = shadow_data.dist < 10.0 ? 0.0 : 1.0;
@@ -154,7 +154,7 @@ void main() {
 //
 //        Data data = rayMarch(camera_ray);
 //        const vec3 ld = light_position - data.position;
-//        Data shadow_data = rayMarch(Ray(data.position + pow(2,-custom_int2) * 2 * data.normal, normalize(ld)));
+//        Data shadow_data = rayMarch(Ray(data.position + pow(2,-detail) * 2 * data.normal, normalize(ld)));
 //        
 //        const vec3 color = mix(-data.normal * 0.25 + 0.75, vec3(1, 0.561, 0), 0.25);
 //        const float shadow = (shadow_data.dist < length(ld)) ? 0.0 : light_intensity / length(ld);
@@ -321,7 +321,7 @@ Data rayMarch(Ray camera_ray) {
     float total_dist = 0;
     for (data.index=0; data.index<max_marches; data.index++) {
         float d = SDF(camera_ray.origin);
-        if (d < pow(2,-custom_int2)) {
+        if (d < pow(2,-detail)) {
             data.collided = true;
             break;
         }
@@ -354,9 +354,9 @@ float SDF(vec3 p) {
         vec3 z = p;
         float dr = 1;
         float r;
-        float power = custom_normalized;
+        float power = custom_float1;
 
-        for (int i=0; i<custom_int; i++) {
+        for (int i=0; i<detail; i++) {
             r = length(z);
             if (r > 2) break;
 
@@ -372,15 +372,15 @@ float SDF(vec3 p) {
     }
     else if (sdf_type == 2) {
 
-        // scale = -1.75, folding limit = 1, folding value = 2, fixed radius = 1.0, and min radius = 0.5,
         // http://blog.hvidtfeldts.net/index.php/2011/11/distance-estimated-3d-fractals-vi-the-mandelbox/
-        const float scale = custom_float;
-        const float folding_limit = custom_float2;
-        const float min_radius2 = custom_float3;
-        const float fixed_radius2 = custom_normalized;
+        // scale = -1.75, folding limit = 1, folding value = 2, fixed radius = 1.0, and min radius = 0.5
+        const float scale = custom_float2;
+        const float folding_limit = custom_float23;
+        const float min_radius2 = custom_float24;
+        const float fixed_radius2 = custom_float1;
         vec3 z = p;
         float dr = 1.0;
-        for (int n = 0; n < custom_int2 + 2; n++) {
+        for (int n = 0; n < detail + 2; n++) {
 	        z = clamp(z, -folding_limit, folding_limit) * 2.0 - z;
 
 	        float r2 = dot(z,z);
@@ -420,9 +420,9 @@ float SDF(vec3 p) {
     }
     else if (sdf_type == 4) {
         ivec2 texSize = textureSize(heightmap, 0);
-        vec2 texCoord = p.xy / texSize * 200 * custom_float;
+        vec2 texCoord = p.xy / texSize * 200 * custom_float2;
         float height = texture(heightmap, texCoord).x;
-        return p.z - height * custom_normalized;
+        return p.z - height * custom_float1;
     }
     else {
 //        return length(position) - 1;
@@ -432,43 +432,38 @@ float SDF(vec3 p) {
 //        return position.z + x + y;
 
 
-
 //        // https://github.com/Angramme/fractal_viewer/blob/master/fractals/koch_curve.glsl
-//        const float PI = 3.14 * custom_float2;
-//        const mat2 rot60deg = mat2(cos(PI/3), -sin(PI/3), sin(PI/3), cos(PI/3));
-//        const mat2 rotm60deg = mat2(cos(PI/3), sin(PI/3), -sin(PI/3), cos(PI/3));
-//
-//        float s2 = 1.;
-//        for(int i=0; i<custom_int; i++){
-//            const float X1 = 2./3;
-//            s2 *= X1;
-//            p /= X1;
-//            // if(dot(normalize(p.xz), vec2(-1, 0)) < 0.5){
-////             if(abs(p.z) > -p.x*tan(PI/3)){
-//            if(abs(p.z) > -p.x*1.73205081){
-//                p.x *= -1;
-//                p.xz = (p.z > 0 ? rotm60deg : rot60deg) * p.xz;
-//            }
-//            p.zy = p.yz;
-//            p.x += 1. * custom_float;
-//        }
-//
-////         if(dot(normalize(p.xz), vec2(1, 0)) < 0.5){
-////         if(abs(p.z) > p.x*tan(PI/3)){
-//        if(abs(p.z) > p.x*1.73205081){
-//            p.x *= -1;
-//            p.xz = (p.z > 0 ? rot60deg : rotm60deg) * p.xz;
-//        }
-//        const float X2 = 1.15470053839;
-//        float D = abs(p.y)+X2*p.x-X2;
-//        const float X1 = 1/sqrt(1+X2*X2);
-//        D *= X1;
-//        return D * s2;
+        const float PI = 3.14 * custom_float1;
+        const mat2 rot60deg = mat2(cos(PI/3), -sin(PI/3), sin(PI/3), cos(PI/3));
+        const mat2 rotm60deg = mat2(cos(PI/3), sin(PI/3), -sin(PI/3), cos(PI/3));
+
+        float s2 = 1.;
+        for(int i=0; i<detail; i++){
+            const float X1 = 2./3;
+            s2 *= X1;
+            p /= X1;
+            if(abs(p.z) > -p.x*1.73205081){
+                p.x *= -1;
+                p.xz = (p.z > 0 ? rotm60deg : rot60deg) * p.xz;
+            }
+            p.zy = p.yz;
+            p.x += 1. * custom_float2;
+        }
+
+        if(abs(p.z) > p.x*1.73205081){
+            p.x *= -1;
+            p.xz = (p.z > 0 ? rot60deg : rotm60deg) * p.xz;
+        }
+        const float X2 = 1.15470053839;
+        float D = abs(p.y)+X2*p.x-X2;
+        const float X1 = 1/sqrt(1+X2*X2);
+        D *= X1;
+        return D * s2;
 
 
         // https://github.com/adamsol/FractalView/blob/master/src/renderers/fractal/juliabulb.glsl
-//        const int NUM_ITERATIONS = custom_int;
-//        const float EXPONENT = custom_normalized * 10;
+//        const int NUM_ITERATIONS = detail;
+//        const float EXPONENT = custom_float1;
 //        vec3 z = p;
 //        vec3 d = vec3(1.0);
 //        float r = 0.0;
@@ -492,20 +487,6 @@ float SDF(vec3 p) {
 //        }
 //        return r * log(r) * 0.5 / length(d);
 
-
-	    vec4 a = vec4(p, 0);
-        float md2 = 1;
-        float mz2 = dot(a, a);
-        for(int i = 0; i < custom_int; i++) {
-            md2 *= 4.0 * mz2; // dz -> 2·z·dz, meaning |dz| -> 2·|z|·|dz| (can take the 4 out of the loop and do an exp2() afterwards)
-            a = vec4( a.x*a.x - a.y*a.y - a.z*a.z - a.w*a.w,
-                 2.0*a.x*a.y,
-                 2.0*a.x*a.z,
-                 2.0*a.x*a.w ); // z  -> z^2 + c
-            mz2 = dot(a,a);
-            if(mz2 > 4.0) break;
-        }
-        return 0.25 * sqrt(mz2/md2) * log(mz2);
     }
 }
 

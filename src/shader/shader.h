@@ -46,14 +46,13 @@ public:
 	float focus_distance;
 	float focus_blur;
 	float light_intensity = 1.0; // unused
-
 	float march_multiplier = 1.0f;
+	int detail = 10; 
 	int custom_int = 10;
-	int custom_int2 = 5;
-	float custom_normalized = 1.0f;
-	float custom_float = 1.0f;
+	float custom_float1 = 1.0f;
 	float custom_float2 = 1.0f;
 	float custom_float3 = 1.0f;
+	float custom_float4 = 1.0f;
 
 
 private:

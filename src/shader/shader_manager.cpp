@@ -138,17 +138,17 @@ void ShaderManager::packUniforms(unsigned int uniform_buffer) const {
 		this->epsilon,
 
 		this->custom_int,
-		this->custom_normalized,
-		this->custom_float,
+		this->custom_float1,
+		this->custom_float2,
 		this->march_multiplier,
 
 		sun_direction,
-		this->custom_int2,
+		this->detail,
 
 		this->focus_distance,
 		this->focus_blur,
-		this->custom_float2,
 		this->custom_float3,
+		this->custom_float4,
 
 		this->light_position,
 		this->light_intensity

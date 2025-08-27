@@ -20,6 +20,7 @@ public:
 
 	void updatePallete(ImVec4 color);
 	void helpMarker(const char* text);
+	void warningMarker(const char* text);
 	void setCursorVisibility(bool show);
 //private:
 	ImVec4 rgbToHsv(ImVec4 rgb);
