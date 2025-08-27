@@ -45,7 +45,7 @@ glm::vec3 Camera::getScreenDirection(GLFWwindow* window) const {
 
     float aspect_ratio = 1.0f * window_width / window_height;
     glm::vec2 uv = glm::vec2{ (mouse_x / window_width) * 2 - 1, (mouse_y / window_height) * 2 - 1 };
-    return normalize(glm::vec3(getRotationMatrix() * glm::vec4(1.0f, -uv.x, -uv.y / aspect_ratio, 1.0f)));
+    return normalize(glm::vec3(getRotationMatrix() * glm::vec4(1.0f, -uv.x * this->fov, -uv.y * this->fov / aspect_ratio, 1.0f)));
 }
 
 void Camera::movePosition(glm::vec3 local_dir) {

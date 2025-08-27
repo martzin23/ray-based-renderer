@@ -420,7 +420,7 @@ float SDF(vec3 p) {
     }
     else if (sdf_type == 4) {
         ivec2 texSize = textureSize(heightmap, 0);
-        vec2 texCoord = p.xy / texSize * 200 * custom_float2;
+        vec2 texCoord = p.xy / texSize * 200 / custom_float2;
         float height = texture(heightmap, texCoord).x;
         return p.z - height * custom_float1;
     }

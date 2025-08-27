@@ -86,6 +86,7 @@ void GUI::build(ShaderManager* shader, SceneManager* scene, Camera* camera, FPSC
 				if (ImGui::ArrowButton("##-res", ImGuiDir_Down)) shader->downsample_factor++;
 				ImGui::Checkbox("Auto refresh", &shader_refresh);
 				helpMarker("Reset screen when clicking so that the changes are immediately visible");
+				warningMarker("Disable this when rendering for a screenshot!");
 				if (ImGui::Button("Screenshot")) {
 					shader->screenshot("res/screenshots/" + getDateTime() + ".jpg", window_width, window_height);
 				};
@@ -309,7 +310,8 @@ void GUI::build(ShaderManager* shader, SceneManager* scene, Camera* camera, FPSC
 					helpMarker("Index of material from material list, bodies can share material properties");
 					ImGui::DragFloat("Emission", (float*)material + 3, 0.1f, 0.f, FLT_MAX);
 					ImGui::SliderFloat("Metallic", (float*)material + 5, 0.f, 1.f);
-					ImGui::SliderFloat("Roughness", (float*)material + 4, 0.f, 1.f);
+					ImGui::SliderFloat("IOR", (float*)material + 4, 0.f, 1.f);
+					helpMarker("Index of refraction, work in progress. When value > 0, object turns to glass.");
 					ImGui::ColorPicker3("Color", (float*)material, ImGuiColorEditFlags_PickerHueWheel);
 				}
 				else {
