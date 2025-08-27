@@ -1,6 +1,6 @@
 #include "texture.h"
 
-Texture::Texture(const char* filepath, unsigned int unit) {
+Texture::Texture(const char* filepath, unsigned int unit, int gl_interpolation) {
 	int width, height, channels;
 	unsigned char* data = stbi_load(filepath, &width, &height, &channels, STBI_rgb_alpha);
 
@@ -13,7 +13,7 @@ Texture::Texture(const char* filepath, unsigned int unit) {
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, gl_interpolation);
 
 	this->unit = unit;
 }

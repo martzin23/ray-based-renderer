@@ -19,9 +19,9 @@ public:
 private:
 	void setupUniforms(GLFWwindow* window);
 	void setupScreenTris();
-	unsigned int make_module(const std::string& filepath, unsigned int module_type);
-	unsigned int make_pipeline_shader(const std::string& vertex_filepath, const std::string& fragment_filepath);
-	unsigned int make_compute_shader(const std::string& compute_filepath);
+	unsigned int makeModule(const std::string& filepath, unsigned int module_type);
+	unsigned int makePipelineShader(const std::string& vertex_filepath, const std::string& fragment_filepath);
+	unsigned int makeComputeShader(const std::string& compute_filepath);
 
 public:
 	// Program IDs
@@ -32,7 +32,7 @@ public:
 	glm::vec3 camera_position;
 	glm::mat4 camera_rotation_matrix;
 	glm::vec2 sun_rotation = glm::vec2(30.f, 45.f);
-	glm::vec3 light_position = glm::vec3(100.f, 100.f, 100.f);
+	glm::vec3 light_position = glm::vec3(100.f, 100.f, 100.f); // unused
 
 	int temporal_counter = 1;
 	int downsample_factor = 1;
@@ -45,7 +45,7 @@ public:
 	float epsilon = 0.001f;
 	float focus_distance;
 	float focus_blur;
-	float light_intensity = 1.0;
+	float light_intensity = 1.0; // unused
 
 	int custom_int = 10;
 	int custom_int2 = 5;

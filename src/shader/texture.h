@@ -7,7 +7,7 @@ private:
 	unsigned int texture;
 	unsigned int unit;
 public:
-	Texture(const char* filepath, unsigned int unit);
+	Texture(const char* filepath, unsigned int unit, int gl_interpolation);
 	~Texture();
 	void Bind();
 };

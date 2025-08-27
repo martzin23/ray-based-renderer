@@ -1,8 +1,8 @@
 #include "shader.h"
 
 ShaderManager::ShaderManager(GLFWwindow* window, const std::string& vertex_filepath, const std::string& fragment_filepath, const std::string& compute_filepath) {
-	pipeline = make_pipeline_shader(vertex_filepath, fragment_filepath);
-	compute = make_compute_shader(compute_filepath);
+	pipeline = makePipelineShader(vertex_filepath, fragment_filepath);
+	compute = makeComputeShader(compute_filepath);
 	setupUniforms(window);
 	setupScreenTris();
 }
@@ -43,7 +43,7 @@ void ShaderManager::setupUniforms(GLFWwindow *window) {
 	glBindBufferBase(GL_UNIFORM_BUFFER, 3, material_buffer);
 	glBufferData(GL_UNIFORM_BUFFER, sizeof(GLfloat) * 8 * MAX_BODIES, NULL, GL_DYNAMIC_DRAW);
 
-	heightmap = new Texture("res/textures/heightmap.png", 0);
+	heightmap = new Texture("res/textures/heightmap3.png", 1, GL_LINEAR); // temporary
 }
 
 void ShaderManager::updateUniforms(SceneManager* scene) {

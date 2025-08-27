@@ -2,9 +2,8 @@
 #include "engine/engine.h"
 
 /* TODO
-load image
-	heightmapping
-	cube mapping
+clean up shader variables
+cube mapping
 
 pbr pathtracing
 	refraction
@@ -15,11 +14,6 @@ scroll
 	speed
 
 fix free move camera
-dls
-importance light sampling
-triangle mesh
-BVH
-
 */
 
 int main() {

@@ -1,7 +1,7 @@
 #version 430
 layout(local_size_x = 32, local_size_y = 32, local_size_z = 1) in;
 layout(rgba32f, binding = 0) uniform image2D color_buffer;
-layout (binding = 0) uniform sampler2D heightmap;
+layout (binding = 1) uniform sampler2D heightmap; // temporary
 
 struct Body {
     vec3 position;
@@ -108,7 +108,6 @@ void main() {
         float shadow = clamp(float(!shadow_data.collided), 0.2, 1.0);
 
         output_color = mix(vec3(0.0), color * diffuse * shadow, data.collided);
-//        output_color = int(data.collided) * materials[bodies[data.index].material].color * (dot(data.normal, sun_direction) * 0.5 + 0.5);
     }
     else if (shader_mode == 1) {
         camera_ray.direction = normalize(camera_ray.direction + randomDirection(pixel_seed) * 0.0005 * fov * downsample_factor);
@@ -128,10 +127,6 @@ void main() {
         vec3 previous_color = imageLoad(color_buffer, pixel_position).xyz;
         if (isinf(previous_color).x || isnan(previous_color).x) previous_color = vec3(0.0);
         output_color = previous_color * ((temporal_counter - 1.0) / temporal_counter) + current_color * (1.0 / temporal_counter);
-
-//        ivec2 texSize = textureSize(heightmap, 0);
-//        vec2 texCoord = vec2(gl_GlobalInvocationID.xy) / vec2(texSize);
-//        output_color = texture(heightmap, texCoord).xyz;
     }
     else if (shader_mode == 3) {
         camera_ray.direction = normalize(camera_ray.direction + randomDirection(pixel_seed) * 0.0003 * fov * downsample_factor);
@@ -141,7 +136,6 @@ void main() {
         Data shadow_data = rayMarch(Ray(data.position + pow(2,-custom_int2) * 2 * data.normal, sun_direction));
         
         const vec3 color = -data.normal * 0.25 + 0.75;
-//        vec3 color = mix(vec3(0.949, 0.525, 0.384), vec3(0.482, 0.949, 0.384), pow(1.0 * data.index / max_marches, 2));
         const float shadow = shadow_data.dist < 10.0 ? 0.0 : 1.0;
         const float diffuse = clamp(dot(sun_direction, data.normal), 0.0, 1.0);
         const float specular = pow(clamp(dot(sun_direction, reflect(camera_ray.direction, data.normal)),0.0, 1.0), 30);
@@ -184,8 +178,13 @@ void main() {
             Data data = rayMarch(ray);
 
             if (!data.collided) {
-                vec3 sky = skyValue(ray.direction);
-                sample_color += sky * ray_color;
+                if (data.dist > 10 || bounce_counter == 0) {
+                    vec3 sky = skyValue(ray.direction);
+                    sample_color += sky * ray_color;
+                }
+                else {
+                    sample_color += 0 * ray_color;
+                }
                 break;
             }
             
@@ -487,20 +486,26 @@ float SDF(vec3 p) {
 //        return r * log(r) * 0.5 / length(d);
 
 
-	    vec4 a = vec4(p, 0);
-        float md2 = 1;
-        float mz2 = dot(a, a);
-        for(int i = 0; i < custom_int; i++) {
-            md2 *= 4.0 * mz2; // dz -> 2暘搞z, meaning |dz| -> 2會z|會dz| (can take the 4 out of the loop and do an exp2() afterwards)
-            a = vec4( a.x*a.x - a.y*a.y - a.z*a.z - a.w*a.w,
-                 2.0*a.x*a.y,
-                 2.0*a.x*a.z,
-                 2.0*a.x*a.w ); // z  -> z^2 + c
-            mz2 = dot(a,a);
-            if(mz2 > 4.0) break;
-        }
-        return 0.25 * sqrt(mz2/md2) * log(mz2);
+//	    vec4 a = vec4(p, 0);
+//        float md2 = 1;
+//        float mz2 = dot(a, a);
+//        for(int i = 0; i < custom_int; i++) {
+//            md2 *= 4.0 * mz2; // dz -> 2暘搞z, meaning |dz| -> 2會z|會dz| (can take the 4 out of the loop and do an exp2() afterwards)
+//            a = vec4( a.x*a.x - a.y*a.y - a.z*a.z - a.w*a.w,
+//                 2.0*a.x*a.y,
+//                 2.0*a.x*a.z,
+//                 2.0*a.x*a.w ); // z  -> z^2 + c
+//            mz2 = dot(a,a);
+//            if(mz2 > 4.0) break;
+//        }
+//        return 0.25 * sqrt(mz2/md2) * log(mz2);
         
+
+        
+        ivec2 texSize = textureSize(heightmap, 0);
+        vec2 texCoord = p.xy / texSize * 200;
+        float height = texture(heightmap, texCoord).x;
+        return p.z - height * custom_normalized * 5;
     }
 }
 

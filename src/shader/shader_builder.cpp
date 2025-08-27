@@ -1,6 +1,6 @@
 #include "shader.h"
 
-unsigned int ShaderManager::make_module(const std::string& filepath, unsigned int module_type) {
+unsigned int ShaderManager::makeModule(const std::string& filepath, unsigned int module_type) {
 	std::ifstream file;
 	std::string line;
 	std::stringstream buffered_lines;
@@ -30,10 +30,10 @@ unsigned int ShaderManager::make_module(const std::string& filepath, unsigned in
 	return shader_module;
 }
 
-unsigned int ShaderManager::make_pipeline_shader(const std::string& vertex_filepath, const std::string& fragment_filepath) {
+unsigned int ShaderManager::makePipelineShader(const std::string& vertex_filepath, const std::string& fragment_filepath) {
 	std::vector<unsigned int> modules;
-	modules.push_back(make_module(vertex_filepath, GL_VERTEX_SHADER));
-	modules.push_back(make_module(fragment_filepath, GL_FRAGMENT_SHADER));
+	modules.push_back(makeModule(vertex_filepath, GL_VERTEX_SHADER));
+	modules.push_back(makeModule(fragment_filepath, GL_FRAGMENT_SHADER));
 
 	unsigned int shader_program = glCreateProgram();
 	for (unsigned int shader_module : modules) {
@@ -56,8 +56,8 @@ unsigned int ShaderManager::make_pipeline_shader(const std::string& vertex_filep
 	return shader_program;
 }
 
-unsigned int ShaderManager::make_compute_shader(const std::string& compute_filepath) {
-	unsigned int shader_module = make_module(compute_filepath, GL_COMPUTE_SHADER);
+unsigned int ShaderManager::makeComputeShader(const std::string& compute_filepath) {
+	unsigned int shader_module = makeModule(compute_filepath, GL_COMPUTE_SHADER);
 
 	unsigned int shader_program = glCreateProgram();
 	glAttachShader(shader_program, shader_module);
