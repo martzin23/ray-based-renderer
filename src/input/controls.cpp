@@ -219,5 +219,5 @@ void InputController::updateGUI(GUI* gui) {
     else if (glfwGetKey(window, GLFW_KEY_TAB) == GLFW_RELEASE) TAB = false;
     
     scene_editable = gui->scene_visible && !gui->gui_hovered;
-    gui->showCursor(!camera_movable);
+    gui->setCursorVisibility(!camera_movable);
 }

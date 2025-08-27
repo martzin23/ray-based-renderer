@@ -16,25 +16,28 @@ public:
 	~GUI();
 	void setup();
 	void render();
-	void build(ShaderManager *shaders, SceneManager *scene, Camera *camera, FPSCounter *fps_counter, GLFWwindow* window);
+	void build(ShaderManager *shaders, SceneManager *scene, Camera *camera, FPSCounter *fps_counter);
 
-	void updatePallete(ImVec4 primary, ImVec4 secondary, ImVec4 background);
+	void updatePallete(ImVec4 color);
 	void helpMarker(const char* text);
-	void showCursor(bool show);
+	void setCursorVisibility(bool show);
+//private:
+	ImVec4 rgbToHsv(ImVec4 rgb);
+	ImVec4 hsvToRgb(ImVec4 hsv);
+	ImVec4 tweakColor(ImVec4 color, float hue_multiplier, float sat_multiplier, float val_multiplier, float alpha_multiplier);
 
-private:
-	ImVec4 primary_color;
-	ImVec4 secondary_color;
-	ImVec4 background_color;
-	int window_width;
-	int window_height;
-	bool gui_movable = false;
-	bool gui_background = true;
-	float gui_scale = 1.0f;
-	bool shader_refresh = true;
 public:
 	bool gui_active = false;
 	bool gui_hovered = false;
 	bool scene_autosave = true;
 	bool scene_visible = true;
+private:
+	ImVec4 gui_color;
+	bool gui_movable = false;
+	bool gui_background = true;
+	float gui_alpha = 1.0f;
+	float gui_scale = 1.0f;
+	int window_width;
+	int window_height;
+	bool shader_refresh = true;
 };

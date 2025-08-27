@@ -96,7 +96,7 @@ void Engine::render() {
 	glDrawArrays(GL_TRIANGLES, 0, 3);
 
 	gui->setup();
-	gui->build(shaders, scene, camera, fps_counter, window);
+	gui->build(shaders, scene, camera, fps_counter);
 	gui->render();
 
 	glfwSwapBuffers(window);

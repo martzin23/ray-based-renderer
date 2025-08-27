@@ -14,7 +14,7 @@ public:
 
 	void updateUniforms(SceneManager* scene);
 	void packUniforms(unsigned int uniform_buffer) const;
-	void screenshot(const std::string& filepath, GLFWwindow* window) const;
+	void screenshot(const std::string& filepath, int window_width, int window_height) const;
 
 private:
 	void setupUniforms(GLFWwindow* window);

@@ -159,10 +159,8 @@ void ShaderManager::packUniforms(unsigned int uniform_buffer) const {
 	glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(PackedUniforms), data.data());
 }
 
-void ShaderManager::screenshot(const std::string& filepath, GLFWwindow *window) const {
+void ShaderManager::screenshot(const std::string& filepath, int window_width, int window_height) const {
 
-	int window_width, window_height;
-	glfwGetWindowSize(window, &window_width, &window_height);
 	unsigned int texture;
 	unsigned int render_buffer;
 	unsigned int frame_buffer;

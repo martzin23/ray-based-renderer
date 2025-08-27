@@ -28,10 +28,8 @@ GUI::GUI(GLFWwindow *window) {
 	style.WindowPadding = ImVec2(10, 10);
 	style.GrabMinSize = 20;
 
-	this->primary_color = ImVec4(0.302f, 0.271f, 0.431f, 1.f);
-	this->secondary_color = ImVec4(0.231f, 0.259f, 0.322f, 0.5f);
-	this->background_color = ImVec4(secondary_color.x * 0.5f, secondary_color.y * 0.5f, secondary_color.z * 0.5f, 1.f);
-	this->updatePallete(primary_color, secondary_color, background_color);
+	this->gui_color = ImVec4(0.302f, 0.271f, 0.431f, 1.f);
+	this->updatePallete(gui_color);
 }
 
 GUI::~GUI() {
@@ -51,8 +49,10 @@ void GUI::render() {
 	ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 }
 
-void GUI::build(ShaderManager* shader, SceneManager* scene, Camera* camera, FPSCounter* fps_counter, GLFWwindow* window) {
+void GUI::build(ShaderManager* shader, SceneManager* scene, Camera* camera, FPSCounter* fps_counter) {
 	if (!this->gui_active) return;
+
+	//-------------------------------------------------------------------------------
 
 	ImGuiWindowFlags window_flags = ImGuiWindowFlags_NoCollapse || ImGuiWindowFlags_NoTitleBar;
 	if (!this->gui_movable) window_flags |= ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_AlwaysAutoResize;
@@ -70,6 +70,8 @@ void GUI::build(ShaderManager* shader, SceneManager* scene, Camera* camera, FPSC
 		ImGui::IsPopupOpen(nullptr, ImGuiPopupFlags_AnyPopupLevel + ImGuiPopupFlags_AnyPopupId);
 	ImGui::PushItemFlag(ImGuiItemFlags_NoTabStop, true);
 
+	//-------------------------------------------------------------------------------
+
 	ImGui::Text("%d", fps_counter->getFPS());
 	ImGui::SameLine();
 	if (ImGui::BeginTabBar("Tabs")) {
@@ -85,7 +87,7 @@ void GUI::build(ShaderManager* shader, SceneManager* scene, Camera* camera, FPSC
 				ImGui::Checkbox("Auto refresh", &shader_refresh);
 				helpMarker("Reset screen when clicking so that the changes are immediately visible");
 				if (ImGui::Button("Screenshot")) {
-					shader->screenshot("res/screenshots/" + getDateTime() + ".jpg", window);
+					shader->screenshot("res/screenshots/" + getDateTime() + ".jpg", window_width, window_height);
 				};
 				helpMarker("Save current frame to res/screenshots/.jpg");
 			ImGui::SeparatorText("Interface");
@@ -108,12 +110,10 @@ void GUI::build(ShaderManager* shader, SceneManager* scene, Camera* camera, FPSC
 				ImGui::Checkbox("Movable", &gui_movable);
 				ImGui::SameLine();
 				ImGui::Checkbox("Background", &gui_background);
-				if (ImGui::ColorEdit4("Primary color", &primary_color.x)) 
-					updatePallete(primary_color, secondary_color, background_color);
-				if (ImGui::ColorEdit4("Secondary color", &secondary_color.x)) 
-					updatePallete(primary_color, secondary_color, background_color);
-				if (ImGui::ColorEdit4("Background color", &background_color.x)) 
-					updatePallete(primary_color, secondary_color, background_color);
+				if (ImGui::ColorEdit4("Interface color", &gui_color.x)) 
+					updatePallete(gui_color);
+				if (ImGui::SliderFloat("Interface transparency", &gui_color.w, 0.f, 1.f))
+					updatePallete(gui_color);
 			ImGui::SeparatorText("Camera");
 				ImGui::Checkbox("Free movement", &camera->free_movement);
 				helpMarker("Movement is unconstrained to world axis (WIP)");
@@ -124,8 +124,7 @@ void GUI::build(ShaderManager* shader, SceneManager* scene, Camera* camera, FPSC
 				ImGui::SliderFloat("Speed", &camera->speed, 0.f, 10.f, "%.6f", ImGuiSliderFlags_Logarithmic);
 				ImGui::DragFloat("Field of view", &camera->fov, 0.01f, 0.f, FLT_MAX);
 				ImGui::InputFloat("Sensitivity", &camera->sensitivity, 0.01f, 0.1f);
-				ImGui::DragFloat("Focus distance", &camera->focus_distance, 0.001f, 0.f, FLT_MAX);
-				//ImGui::DragFloat("Focus blur", &camera->focus_blur, 0.00005f, 0.f, FLT_MAX);
+				ImGui::SliderFloat("Focus distance", &camera->focus_distance, 0.f, 100.f, "%.6f", ImGuiSliderFlags_Logarithmic);
 				ImGui::SliderFloat("Focus blur", &camera->focus_blur, 0.f, 1.f, "%.6f", ImGuiSliderFlags_Logarithmic);
 			ImGui::SeparatorText("");
 
@@ -148,7 +147,7 @@ void GUI::build(ShaderManager* shader, SceneManager* scene, Camera* camera, FPSC
 				ImGui::SameLine();
 				if (ImGui::Button("Phong")) shader->shader_mode = 3;
 				ImGui::SameLine();
-				if (ImGui::Button("PBR")) shader->shader_mode = 4;
+				if (ImGui::Button("Pathtraced")) shader->shader_mode = 4;
 				helpMarker("Different ways od displaying bodies");
 			ImGui::SeparatorText("Signed Distance Function");
 				ImGui::Text("Type");
@@ -332,26 +331,22 @@ void GUI::build(ShaderManager* shader, SceneManager* scene, Camera* camera, FPSC
 	ImGui::End();
 }
 
+void GUI::updatePallete(ImVec4 color) {
+	ImVec4 primary_normal = color;
+	ImVec4 primary_highlight = tweakColor(primary_normal, 1.f, 1.f, 1.5f, 1.f);
+	ImVec4 primary_muted = tweakColor(primary_normal, 1.f, 1.f, 1.f, 0.5f);
 
-void GUI::updatePallete(ImVec4 primary, ImVec4 secondary, ImVec4 background) {
+	ImVec4 secondary_normal = tweakColor(color, 1.f, 0.5f, 1.f, 0.3f);
+	ImVec4 secondary_highlight = tweakColor(secondary_normal, 1.f, 1.f, 1.5f, 1.f);
+	ImVec4 secondary_muted = tweakColor(secondary_normal, 1.f, 1.f, 1.f, 0.5f);
 
+	ImVec4 background_normal = tweakColor(color, 1.f, 0.25f, 0.25f, 1.f);
 	ImVec4 blank = ImVec4();
-
-	ImVec4 primary_normal = primary;
-	ImVec4 primary_highlight = ImVec4(primary_normal.x * 1.5f, primary_normal.y * 1.5f, primary_normal.z * 1.5f, primary_normal.w);
-	ImVec4 primary_muted = ImVec4(primary_normal.x, primary_normal.y, primary_normal.z, primary_normal.w * 0.5f);
-
-	//ImVec4 secondary_normal = ImVec4(primary.x, primary.y, primary.z, primary.w * 0.3f);
-	ImVec4 secondary_normal = secondary;
-	ImVec4 secondary_highlight = ImVec4(secondary_normal.x * 1.5f, secondary_normal.y * 1.5f, secondary_normal.z * 1.5f, secondary_normal.w);
-	ImVec4 secondary_muted = ImVec4(secondary_normal.x, secondary_normal.y, secondary_normal.z, secondary_normal.w * 0.5f);
-
-	//ImVec4 background_normal = ImVec4(primary.x * 0.25f, primary.y * 0.25f, primary.z * 0.25f, primary.w);
-	ImVec4 background_normal = background;
+	ImVec4 text = ImVec4(1.f, 1.f, 1.f, 1.f);
 
 	ImGuiStyle& style = ImGui::GetStyle();
-	style.Colors[ImGuiCol_Text] = ImVec4(1.f, 1.f, 1.f, 1.f);
-	style.Colors[ImGuiCol_TextDisabled] = ImVec4(1.f, 1.f, 1.f, 0.5f);
+	style.Colors[ImGuiCol_Text] = text;
+	style.Colors[ImGuiCol_TextDisabled] = ImVec4(text.x, text.y, text.z, 0.5f * text.w);
 	style.Colors[ImGuiCol_WindowBg] = background_normal;
 	style.Colors[ImGuiCol_ChildBg] = blank;
 	style.Colors[ImGuiCol_PopupBg] = background_normal;
@@ -414,10 +409,77 @@ void GUI::helpMarker(const char* text) {
 	ImGui::SetItemTooltip(text);
 }
 
-void GUI::showCursor(bool show) {
+void GUI::setCursorVisibility(bool show) {
 	if (show)
 		ImGui::SetMouseCursor(ImGuiMouseCursor_Arrow);
 	else
 		ImGui::SetMouseCursor(ImGuiMouseCursor_None);
 }
 
+ImVec4 GUI::rgbToHsv(ImVec4 rgb) {
+	float r = rgb.x;
+	float g = rgb.y;
+	float b = rgb.z;
+
+	float maxVal = std::max({ r, g, b });
+	float minVal = std::min({ r, g, b });
+	float delta = maxVal - minVal;
+
+	float h = 0.0f;
+	float s = 0.0f;
+	float v = maxVal;
+
+	if (delta > 0.0f) {
+		s = delta / maxVal;
+
+		if (maxVal == r)
+			h = (g - b) / delta;
+		else if (maxVal == g)
+			h = 2.0f + (b - r) / delta;
+		else
+			h = 4.0f + (r - g) / delta;
+
+		h /= 6.0f;
+		if (h < 0.0f)
+			h += 1.0f;
+	}
+	
+	return ImVec4(h, s, v, rgb.w);
+}
+
+ImVec4 GUI::hsvToRgb(ImVec4 hsv) {
+	float h = hsv.x;
+	float s = hsv.y;
+	float v = hsv.z;
+
+	if (s <= 0.0f)
+		return ImVec4(v, v, v, hsv.w);
+
+	h = std::fmod(h, 1.0f);
+	if (h < 0.0f) 
+		h += 1.0f;
+
+	h *= 6.0f;
+	int sector = static_cast<int>(h);
+	float fractional = h - sector;
+
+	float p = v * (1.0f - s);
+	float q = v * (1.0f - s * fractional);
+	float t = v * (1.0f - s * (1.0f - fractional));
+
+	switch (sector) {
+		case 0: return ImVec4(v, t, p, hsv.w);
+		case 1: return ImVec4(q, v, p, hsv.w);
+		case 2: return ImVec4(p, v, t, hsv.w);
+		case 3: return ImVec4(p, q, v, hsv.w);
+		case 4: return ImVec4(t, p, v, hsv.w);
+		case 5: return ImVec4(v, p, q, hsv.w);
+		default: return ImVec4(v, p, q, hsv.w);
+	}
+}
+
+ImVec4 GUI::tweakColor(ImVec4 color, float hue_multiplier, float sat_multiplier, float val_multiplier, float alpha_multiplier) {
+	ImVec4 hsv = rgbToHsv(color);
+	ImVec4 multiplied_hsv = ImVec4(hsv.x * hue_multiplier, hsv.y * sat_multiplier, hsv.z * val_multiplier, hsv.w * alpha_multiplier);
+	return hsvToRgb(multiplied_hsv);
+}

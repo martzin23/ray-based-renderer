@@ -5,7 +5,6 @@
 load image
 	heightmapping
 	cube mapping
-unified interface color
 
 pbr pathtracing
 	refraction
