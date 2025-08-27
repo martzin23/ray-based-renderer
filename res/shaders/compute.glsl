@@ -1,7 +1,7 @@
 #version 430
 layout(local_size_x = 32, local_size_y = 32, local_size_z = 1) in;
 layout(rgba32f, binding = 0) uniform image2D color_buffer;
-layout (binding = 1) uniform sampler2D heightmap; // temporary
+layout (binding = 1) uniform sampler2D heightmap;
 
 struct Body {
     vec3 position;
@@ -88,7 +88,7 @@ void main() {
 
     vec2 screen_uv = vec2((2.0 * pixel_position.x - screen_size.x) / screen_size.x, (2.0 * pixel_position.y - screen_size.y) / screen_size.x);
     uint pixel_seed = pixel_position.y * screen_size.x + pixel_position.x + temporal_counter * 69420;
-    // uint pixel_seed = temporal_counter;
+//    uint pixel_seed = temporal_counter;
 
     //-------------------CAMERA RAY-------------------------------------
 
@@ -108,6 +108,7 @@ void main() {
         float shadow = clamp(float(!shadow_data.collided), 0.2, 1.0);
 
         output_color = mix(vec3(0.0), color * diffuse * shadow, data.collided);
+//         output_color = vec3(bluenoise_value);
     }
     else if (shader_mode == 1) {
         camera_ray.direction = normalize(camera_ray.direction + randomDirection(pixel_seed) * 0.0005 * fov * downsample_factor);
@@ -192,7 +193,7 @@ void main() {
             ray.origin = data.position + ray.direction * epsilon;
             
             vec3 color = vec3(1.0);
-//            vec3 color = -data.normal * 0.5 + 0.5;
+//            vec3 color = -data.normal * 0.25 + 0.75;
             vec3 emission = vec3(0.0);
             sample_color += emission * color * ray_color;
             ray_color *= color;
@@ -332,7 +333,7 @@ Data rayMarch(Ray camera_ray) {
         total_dist += d * march_multiplier;
     }
 
-    data.normal = derivateNormal(camera_ray.origin, pow(2,-custom_int));
+    data.normal = derivateNormal(camera_ray.origin, epsilon);
     data.position = camera_ray.origin;
     data.dist = total_dist;
     return data;
@@ -353,7 +354,7 @@ float SDF(vec3 p) {
         vec3 z = p;
         float dr = 1;
         float r;
-        float power = custom_normalized * 20;
+        float power = custom_normalized;
 
         for (int i=0; i<custom_int; i++) {
             r = length(z);
@@ -376,10 +377,10 @@ float SDF(vec3 p) {
         const float scale = custom_float;
         const float folding_limit = custom_float2;
         const float min_radius2 = custom_float3;
-        const float fixed_radius2 = custom_normalized * 10;
+        const float fixed_radius2 = custom_normalized;
         vec3 z = p;
         float dr = 1.0;
-        for (int n = 0; n < custom_int2 + 3; n++) {
+        for (int n = 0; n < custom_int2 + 2; n++) {
 	        z = clamp(z, -folding_limit, folding_limit) * 2.0 - z;
 
 	        float r2 = dot(z,z);
@@ -416,6 +417,12 @@ float SDF(vec3 p) {
         }
         return min_dist;
 
+    }
+    else if (sdf_type == 4) {
+        ivec2 texSize = textureSize(heightmap, 0);
+        vec2 texCoord = p.xy / texSize * 200 * custom_float;
+        float height = texture(heightmap, texCoord).x;
+        return p.z - height * custom_normalized;
     }
     else {
 //        return length(position) - 1;
@@ -486,26 +493,19 @@ float SDF(vec3 p) {
 //        return r * log(r) * 0.5 / length(d);
 
 
-//	    vec4 a = vec4(p, 0);
-//        float md2 = 1;
-//        float mz2 = dot(a, a);
-//        for(int i = 0; i < custom_int; i++) {
-//            md2 *= 4.0 * mz2; // dz -> 2暘搞z, meaning |dz| -> 2會z|會dz| (can take the 4 out of the loop and do an exp2() afterwards)
-//            a = vec4( a.x*a.x - a.y*a.y - a.z*a.z - a.w*a.w,
-//                 2.0*a.x*a.y,
-//                 2.0*a.x*a.z,
-//                 2.0*a.x*a.w ); // z  -> z^2 + c
-//            mz2 = dot(a,a);
-//            if(mz2 > 4.0) break;
-//        }
-//        return 0.25 * sqrt(mz2/md2) * log(mz2);
-        
-
-        
-        ivec2 texSize = textureSize(heightmap, 0);
-        vec2 texCoord = p.xy / texSize * 200;
-        float height = texture(heightmap, texCoord).x;
-        return p.z - height * custom_normalized * 5;
+	    vec4 a = vec4(p, 0);
+        float md2 = 1;
+        float mz2 = dot(a, a);
+        for(int i = 0; i < custom_int; i++) {
+            md2 *= 4.0 * mz2; // dz -> 2暘搞z, meaning |dz| -> 2會z|會dz| (can take the 4 out of the loop and do an exp2() afterwards)
+            a = vec4( a.x*a.x - a.y*a.y - a.z*a.z - a.w*a.w,
+                 2.0*a.x*a.y,
+                 2.0*a.x*a.z,
+                 2.0*a.x*a.w ); // z  -> z^2 + c
+            mz2 = dot(a,a);
+            if(mz2 > 4.0) break;
+        }
+        return 0.25 * sqrt(mz2/md2) * log(mz2);
     }
 }
 

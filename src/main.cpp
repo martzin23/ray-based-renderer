@@ -3,7 +3,7 @@
 
 /* TODO
 clean up shader variables
-cube mapping
+readme
 
 pbr pathtracing
 	refraction

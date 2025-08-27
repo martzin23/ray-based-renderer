@@ -110,15 +110,11 @@ void GUI::build(ShaderManager* shader, SceneManager* scene, Camera* camera, FPSC
 				ImGui::Checkbox("Movable", &gui_movable);
 				ImGui::SameLine();
 				ImGui::Checkbox("Background", &gui_background);
-				if (ImGui::ColorEdit4("Interface color", &gui_color.x)) 
+				if (ImGui::ColorEdit4("Color", &gui_color.x)) 
 					updatePallete(gui_color);
-				if (ImGui::SliderFloat("Interface transparency", &gui_color.w, 0.f, 1.f))
+				if (ImGui::SliderFloat("Transparency", &gui_color.w, 0.f, 1.f))
 					updatePallete(gui_color);
 			ImGui::SeparatorText("Camera");
-				ImGui::Checkbox("Free movement", &camera->free_movement);
-				helpMarker("Movement is unconstrained to world axis (WIP)");
-				if (ImGui::Button("Reset position")) camera->position = glm::vec3(0.f, 0.f, 0.f);
-				helpMarker("Reset camera position to world origin");
 				ImGui::DragFloat3("Position", &camera->position.x, 0.1f);
 				ImGui::DragFloat2("Rotation", &camera->rotation.x, 1.f);
 				ImGui::SliderFloat("Speed", &camera->speed, 0.f, 10.f, "%.6f", ImGuiSliderFlags_Logarithmic);
@@ -126,6 +122,10 @@ void GUI::build(ShaderManager* shader, SceneManager* scene, Camera* camera, FPSC
 				ImGui::InputFloat("Sensitivity", &camera->sensitivity, 0.01f, 0.1f);
 				ImGui::SliderFloat("Focus distance", &camera->focus_distance, 0.f, 100.f, "%.6f", ImGuiSliderFlags_Logarithmic);
 				ImGui::SliderFloat("Focus blur", &camera->focus_blur, 0.f, 1.f, "%.6f", ImGuiSliderFlags_Logarithmic);
+				if (ImGui::Button("Reset position")) camera->position = glm::vec3(0.f, 0.f, 0.f);
+				helpMarker("Reset camera position to world origin");
+				ImGui::Checkbox("Free movement", &camera->free_movement);
+				helpMarker("Movement is unconstrained to world axis (WIP)");
 			ImGui::SeparatorText("");
 
 			ImGui::EndTabItem();
@@ -149,54 +149,81 @@ void GUI::build(ShaderManager* shader, SceneManager* scene, Camera* camera, FPSC
 				ImGui::SameLine();
 				if (ImGui::Button("Pathtraced")) shader->shader_mode = 4;
 				helpMarker("Different ways od displaying bodies");
+			ImGui::SeparatorText("Marching");
+				ImGui::InputInt("Max marches", &shader->max_marches, 50, 200);
+				if (shader->max_marches < 1) shader->max_marches = 1;
+				helpMarker("Maximum number of steps a ray can take");
+				ImGui::SliderFloat("March multiplier", &shader->march_multiplier, 0.f, 1.f);
+				helpMarker("Multiplies the size of marches, reduces artifacts, slows performance");
+				ImGui::InputInt("Detail", &shader->custom_int2, 1, 5);
+				helpMarker("Surface threshold of raymarching, level of detail for fractals");
+				ImGui::InputInt("Normals precision", &shader->custom_int, 1, 5);
+				helpMarker("Number of iterations for calculating fractals, reduces artifacts");
+				ImGui::SliderFloat("Epsilon", &shader->epsilon, 0.f, 1.f, "%.6f", ImGuiSliderFlags_Logarithmic);
 			ImGui::SeparatorText("Signed Distance Function");
 				ImGui::Text("Type");
 				ImGui::SameLine();
-				if (ImGui::Button("MandelBulb")) 
+				if (ImGui::Button("MandelBulb"))
 				{
 					shader->sdf_type = 1;
 					scene_visible = false;
 				}
 				ImGui::SameLine();
-				if (ImGui::Button("MandelBox")) 
+				if (ImGui::Button("MandelBox"))
 				{
 					shader->sdf_type = 2;
+					shader->custom_float = -2.f;
 					scene_visible = false;
 				}
 				ImGui::SameLine();
-				if (ImGui::Button("Scene")) 
+				if (ImGui::Button("Scene"))
 				{
 					shader->sdf_type = 3;
 					scene_visible = true;
 				}
 				ImGui::SameLine();
-				if (ImGui::Button("Custom")) 
+				if (ImGui::Button("Heightmap"))
+				{
+					shader->sdf_type = 4;
+					scene_visible = false;
+				}
+				ImGui::SameLine();
+				if (ImGui::Button("Custom"))
 				{
 					shader->sdf_type = 0;
 					scene_visible = false;
 				}
 				helpMarker("Type of body that is rendered");
-			ImGui::SeparatorText("Marching");
-				ImGui::InputInt("Max marches", &shader->max_marches, 10, 50);
-				if (shader->max_marches < 1) shader->max_marches = 1;
-				helpMarker("Maximum number of steps a ray takes before it gives up");
-				ImGui::SliderFloat("March multiplier", &shader->march_multiplier, 0.f, 1.f);
-				helpMarker("Multiplies the size of marches, reduces artifacts");
-				ImGui::InputInt("Detail", &shader->custom_int2, 1, 5);
-				helpMarker("Surface threshold of raymarching, level of detail for fractals");
-				ImGui::InputInt("Iterations", &shader->custom_int, 1, 5);
-				helpMarker("Number of iterations for calculating fractals, reduces artifacts");
-				ImGui::SliderFloat("Variant", &shader->custom_normalized, 0.f, 1.f);
-				helpMarker("Changes the appearance of the fractal");
-			ImGui::SeparatorText("Custom variables");
-				ImGui::DragFloat("Custom Float1", &shader->custom_float, 0.01f);
-				ImGui::DragFloat("Custom Float2", &shader->custom_float2, 0.01f);
-				ImGui::DragFloat("Custom Float3", &shader->custom_float3, 0.01f);
+				ImGui::Text("If you can't see the fractals, move closer to the origin of the coordinate system!");
+				switch (shader->sdf_type) {
+				case 1:
+					ImGui::DragFloat("Power", &shader->custom_normalized, 0.1f);
+					helpMarker("Changes the appearance of the fractal");
+					break;
+				case 2:
+					ImGui::DragFloat("Fixed radius", &shader->custom_normalized, 0.01f);
+					ImGui::DragFloat("Scale", &shader->custom_float, 0.01f);
+					ImGui::DragFloat("Folding limit", &shader->custom_float2, 0.01f);
+					ImGui::DragFloat("Min radius", &shader->custom_float3, 0.01f);
+					break;
+				case 3:
+					break;
+				case 4:
+					ImGui::DragFloat("Height", &shader->custom_normalized, 0.01f);
+					ImGui::DragFloat("Size", &shader->custom_float, 0.01f);
+					break;
+				case 0:
+					ImGui::DragFloat("Custom Float", &shader->custom_normalized, 0.01f);
+					ImGui::DragFloat("Custom Float1", &shader->custom_float, 0.01f);
+					ImGui::DragFloat("Custom Float2", &shader->custom_float2, 0.01f);
+					ImGui::DragFloat("Custom Float3", &shader->custom_float3, 0.01f);
+					break;
+				}
 			ImGui::SeparatorText("Lighting");
 				ImGui::DragFloat2("Sun rotation", &shader->sun_rotation.x, 1.f, 0.f, 0.f, "%.0f deg");
-				if (ImGui::Button("Set light")) shader->light_position = camera->getPosition();
-				ImGui::DragFloat3("Light position", &shader->light_position.x, 0.001f);
-				ImGui::DragFloat("Light intensity", &shader->light_intensity, 0.01f, 0.f, FLT_MAX);
+				//if (ImGui::Button("Set light")) shader->light_position = camera->getPosition();
+				//ImGui::DragFloat3("Light position", &shader->light_position.x, 0.001f);
+				//ImGui::DragFloat("Light intensity", &shader->light_intensity, 0.01f, 0.f, FLT_MAX);
 			ImGui::SeparatorText("");
 
 			ImGui::EndTabItem();
@@ -214,22 +241,16 @@ void GUI::build(ShaderManager* shader, SceneManager* scene, Camera* camera, FPSC
 			ImGui::SeparatorText("View");
 				ImGui::Text("Mode");
 				ImGui::SameLine();
-				if (ImGui::Button("PathTraced")) shader->shader_mode = 1;
-				ImGui::SameLine();
 				if (ImGui::Button("RayTraced")) shader->shader_mode = 0;
+				ImGui::SameLine();
+				if (ImGui::Button("PathTraced")) shader->shader_mode = 1;
 			ImGui::SeparatorText("Sampling");
 				ImGui::InputInt("Max Bounces", &shader->max_bounces, 1, 10);
 				if (shader->max_bounces < 0) shader->max_bounces = 0;
-				//ImGui::InputFloat("Epsilon", &shader->epsilon, 0.001f, 0.01f);
 				ImGui::SliderFloat("Epsilon", &shader->epsilon, 0.f, 1.f, "%.6f", ImGuiSliderFlags_Logarithmic);
 				//if (shader->epsilon < 0.00001f) shader->epsilon = 0.00001f;
-				helpMarker("Used when a small number is needed but isn't zero");
-			ImGui::SeparatorText("Custom variables");
-				ImGui::InputInt("Custom Int", &shader->custom_int, 1, 10);
-				ImGui::InputInt("Custom Int2", &shader->custom_int2, 1, 10);
-				ImGui::SliderFloat("Custom Norm", &shader->custom_normalized, 0.f, 1.f);
-				ImGui::DragFloat("Custom Float1", &shader->custom_float, 0.01f);
-				ImGui::SeparatorText("Sun");
+				helpMarker("Arbitrary small number, tweak to reduce artifacts");
+			ImGui::SeparatorText("Sun");
 				ImGui::DragFloat2("Sun rotation", &shader->sun_rotation.x, 1.f, 0.f, 0.f, "%.0f deg");
 			ImGui::SeparatorText("");
 
@@ -290,6 +311,9 @@ void GUI::build(ShaderManager* shader, SceneManager* scene, Camera* camera, FPSC
 					ImGui::SliderFloat("Metallic", (float*)material + 5, 0.f, 1.f);
 					ImGui::SliderFloat("Roughness", (float*)material + 4, 0.f, 1.f);
 					ImGui::ColorPicker3("Color", (float*)material, ImGuiColorEditFlags_PickerHueWheel);
+				}
+				else {
+					ImGui::Text("Select a body with left click!");
 				}
 			ImGui::SeparatorText("");
 

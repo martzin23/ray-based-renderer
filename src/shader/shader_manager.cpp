@@ -43,7 +43,7 @@ void ShaderManager::setupUniforms(GLFWwindow *window) {
 	glBindBufferBase(GL_UNIFORM_BUFFER, 3, material_buffer);
 	glBufferData(GL_UNIFORM_BUFFER, sizeof(GLfloat) * 8 * MAX_BODIES, NULL, GL_DYNAMIC_DRAW);
 
-	heightmap = new Texture("res/textures/heightmap3.png", 1, GL_LINEAR); // temporary
+	heightmap = new Texture("res/textures/heightmap3.png", 1, GL_LINEAR);
 }
 
 void ShaderManager::updateUniforms(SceneManager* scene) {

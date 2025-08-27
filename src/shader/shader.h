@@ -47,13 +47,13 @@ public:
 	float focus_blur;
 	float light_intensity = 1.0; // unused
 
+	float march_multiplier = 1.0f;
 	int custom_int = 10;
 	int custom_int2 = 5;
-	float custom_float = -2.0f;
+	float custom_normalized = 1.0f;
+	float custom_float = 1.0f;
 	float custom_float2 = 1.0f;
 	float custom_float3 = 1.0f;
-	float march_multiplier = 1.0f;
-	float custom_normalized = 0.0f;
 
 
 private:
